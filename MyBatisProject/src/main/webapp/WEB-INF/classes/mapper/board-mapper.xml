@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="boardMapper">
+
+	<sql id="selectColumn">
+		SELECT
+				BOARD_NO boardNo,
+				BOARD_TITLE boardTitle,
+				USER_ID boardWriter,
+				COUNT,
+				CREATE_DATE createDate
+	</sql>
+	
+	<select id="selectListCount" resultType="_int">
+		SELECT
+				COUNT(*)
+		  FROM
+		  		BOARD
+		 WHERE
+		 		STATUS = 'Y'
+		   AND	
+		   		BOARD_TYPE = 1
+	</select>
+	
+	<select id="selectList" resultType="board">
+		<include refid="selectColumn"/>
+		  FROM
+		  		BOARD
+		  JOIN
+		  		MEMBER ON (BOARD_WRITER = USER_NO)
+		 WHERE
+		 		BOARD.STATUS = 'Y'
+		   AND
+		   		BOARD_TYPE = 1
+		 ORDER
+		 	BY
+		 		CREATE_DATE DESC		
+	</select>
+	
+	<update id="increaseCount" parameterType="_int">
+		UPDATE
+		  		BOARD
+		  SET
+		  		COUNT = COUNT + 1
+		 WHERE
+		 		BOARD_NO = #{ boardNo }
+		   AND
+		   		STATUS = 'Y'
+	</update>
+	
+	
+	<select id="selectBoard" parameterType="_int" resultType="board">
+		<include refid="selectColumn"/>
+				,
+				BOARD_CONTENT AS boardContent
+		 FROM
+		 		BOARD
+		 JOIN
+		 		MEMBER ON (USER_NO = BOARD_WRITER)
+		WHERE
+				BOARD.STATUS = 'Y'
+		  AND
+		  		BOARD_NO = #{boardNo}
+	</select>
+	
+	<select id="selectReplyList" parameterType="_int" 
+	resultType="com.kh.ssuper.board.model.vo.Reply">
+		SELECT
+				REPLY_NO replyNo,
+				REPLY_CONTENT replyContent,
+				CREATE_DATE createDate,
+				USER_ID replyWriter
+		  FROM
+		  		REPLY
+		  JOIN
+		  		MEMBER ON (REPLY_WRITER = USER_NO)
+		 WHERE
+		 		REF_BNO = #{boardNo}
+	</select>
+	
+	<resultMap id="boardResultSet" type="board">
+		<id column="boardNo" property="boardNo" />
+		<result column="boardTitle" property="boardTitle" />
+		<result column="boardWriter" property="boardWriter" />
+		<result column="count" property="count"/>
+		<result column="createDate" property="createDate" />
+		<result column="boardContent" property="boardContent" />
+		<collection property="replyList" ofType="com.kh.ssuper.board.model.vo.Reply">
+			<id column="replyNo" property="replyNo"/>
+			<result column="replyWriter" property="replyWriter"/>
+			<result column="replyContent" property="replyContent" />
+			<result column="replyDate" property="createDate" />
+		</collection>
+	</resultMap>
+	
+	<select id="selectBoardAndReply" parameterType="_int" resultMap="boardResultSet">
+		SELECT 
+		        BOARD_NO boardNo,
+		        BOARD_TITLE boardTitle,
+		        M1.USER_ID boardWriter,
+		        COUNT,
+		        BOARD.CREATE_DATE createDate,
+		        BOARD_CONTENT boardContent,
+		        REPLY_NO replyNo,
+		        M2.USER_ID replyWriter,
+		        REPLY_CONTENT replyContent,
+		        REPLY.CREATE_DATE createDate
+		  FROM
+		        BOARD
+		  JOIN
+		        MEMBER M1 ON (BOARD_WRITER = M1.USER_NO)
+		  JOIN
+		        REPLY ON(BOARD_NO = REF_BNO)
+		  JOIN
+		        MEMBER M2 ON(REPLY_WRITER = M2.USER_NO)
+		 WHERE
+		        BOARD.STATUS = 'Y'
+		  AND
+		        BOARD_NO = #{boardNo}
+		 ORDER
+		    BY
+		        REPLY.CREATE_DATE DESC
+	</select>
+	
+	
+	<select id="searchedCount" parameterType="hashmap" resultType="_int">
+		select count(*) 
+		 from board join member on(board_writer = user_no)
+		 where board.status = 'Y'
+		<if test="condition == 'content'">
+			and board_content
+		</if>
+		<if test="condition == 'writer'">
+			and user_id
+		</if>
+		<if test="condition == 'title'">
+			and board_title
+		</if>
+		 like '%' || #{keyword} || '%'
+	</select>
+	
+	<select id="selectSearchList" parameterType="hashmap" resultType="board">
+		<include refid="selectColumn" />
+		FROM
+			BOARD
+		JOIN
+			MEMBER ON(BOARD_WRITER = USER_NO)
+		WHERE
+			BOARD.STATUS = 'Y'
+		<choose>
+			<when test="condition == 'writer'">
+				AND USER_ID
+			</when>
+			<when test="conditon == 'title'">
+				AND BOARD_TITLE
+			</when>
+			<otherwise>
+				AND BOARD_CONTENT
+			</otherwise>
+		</choose>
+			LIKE '%' || #{keyword} || '%'
+		ORDER
+		   BY
+		   		BOARD_NO DESC
+	</select>
+
+	
+
+</mapper>  
+  

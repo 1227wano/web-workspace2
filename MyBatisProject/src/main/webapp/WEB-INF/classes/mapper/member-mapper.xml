@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 전체가 mapper로 감싸져있어야함 -->
+<mapper namespace="memberMapper">
+<!-- namespace : 해당 mapper의 고유!한 별칭 -->
+	
+	<!-- 
+		* DML일 경우 
+		<insert id="각 SQL문의 식별자" parameterType="SQL문을 실행할때 필요한 자바타입(풀클래스명) 혹은 별칭">
+			쿼리문
+		</insert>
+		<update>동일</update>
+		<delete>동일</delete>
+		
+		* SELECT문일 경우
+		<select id="각 SQL문의 식별자" parameter="SQL문을 실행할 떄 필요한 자바타입(풀클래스명) 혹은 별칭"
+		 resultType="조회결과를 반환하는 자바타입" 또는 *중요*resultMap="조회결과를 뽑아서 매핑할 resultMap의 id"*중요*>
+			쿼리문
+		</select>
+		
+		=> parameterType속성은 전달받은 값이 없다면 생략가능
+		=> SELECT문의 경우 결과가 다양한 형태로 반환될 수 있기 때문에
+		
+		== count(*) => 정수 / 중복체크 => 문자열
+		
+		=> 반드시 resultType(자바에서 제공하는 자료형) 또는
+		=> resultMap(내가 만든 resultMap id)으로 결과따른 타입을 지정해줘야함!!
+		
+		그동안 pstmt객체를 이용해서 위치홀더?를 사용했지만, 
+		앞으로는 위치홀더 대신 해당 SQL문에 전달도니 객체로부터 값을 꺼내서 사용 = 내부적으로 getter메소드를 호출!
+		값을 꺼내는 방법 #{ 필드명 또는 변수명 또는 map의 키값 }을 이용
+	 -->
+	 
+	 <insert id="insertMember" parameterType="com.kh.ssuper.member.model.vo.Member">
+	 	INSERT
+	 	  INTO
+	 	  		MEMBER
+	 	  		(
+	 	  		USER_NO,
+	 	  		USER_ID,
+	 	  		USER_PWD,
+	 	  		USER_NAME,
+	 	  		EMAIL,
+	 	  		INTEREST
+	 	  		)
+	 	VALUES
+	 			(
+	 			SEQ_UNO.NEXTVAL,
+	 			#{userId},
+	 			#{userPwd},
+	 			#{userName},
+	 			#{email},
+	 			#{interest}
+	 			)
+	 </insert>
+
+	 <!-- 
+	 	* resultMap : 마이바티스에서 가장 강력하고 중요한 요소
+	 				ResultSet으로부터 조회한 컬럼의 값을 하나씩 뽑아서
+	 				내가 지정한 VO객체에 각 필드에 담는 JDBC코드를 줄여주는 역할 수행
+	 		if(rset.next()){
+	 			Member m = new Member();
+	 			m.setUserNo(rset.getInt("USER_NO"));
+	 			...
+	 		}	↑ 이거 대체함
+	 			
+	 	<resultMap id="식별자" type="조회된 결과를 담아서 반환하고자하는 VO객체의 타입(풀클래스명) 혹은 별칭">
+	 		<result column="조회된 결과를 뽑고자 하는 DB컬럼명" property="해당 결과를 담는 필드명" />
+	 		
+	 		ex)	
+	 		<result column="USER_NO" property="userNo" />
+	 	</resultMap>
+	  -->
+	 
+	 <!-- 내부적으로 필드에 대한 setter메소드를 호출 -->
+	 
+	 <!-- 
+	 <resultMap id="memberResultSet" type="member">	 -->
+	 
+	 <!--  
+	 	<id column="USER_NO" property="userNo" />	 PK인 컬럼은 id태그!
+	 	<result column="USER_ID" property="userId"/>
+	 	<result column="USER_PWD" property="userPwd"/>
+	 	<result column="USER_NAME" property="userName"/>
+	 	<result column="EMAIL" property="email"/>
+	 	<result column="INTEREST" property="interest"/>
+	 	<result column="ENROLL_DATE" property="enrollDate"/>
+	 	<result column="MODIFY_DATE" property="modifyDate"/>
+	 	<result column="STATUS" property="status"/>
+	 </resultMap>
+	 -->
+
+	 <!-- AutoMapping 써보기					   resultMap="memberResultSet">   -->
+	 <select id="login" parameterType="member" resultType="member">
+	 	SELECT
+	 			USER_NO as userNo,
+	 			USER_ID as userId,
+	 			USER_PWD as userPwd,
+	 			USER_NAME as userName,
+	 			EMAIL,
+	 			INTEREST,
+	 			ENROLL_DATE as enrollDate,
+	 			MODIFY_DATE as modifyDate,
+	 			STATUS
+	 	  FROM
+	 	  		MEMBER
+	 	 WHERE
+	 			USER_ID = #{userId}
+	 	   AND
+	 	   		USER_PWD = #{userPwd}
+	 	   AND
+	 	   		MEMBER.STATUS = 'Y'
+	 </select>
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+</mapper>
