@@ -24,6 +24,8 @@ public class BoardSearchController extends HttpServlet {
     public BoardSearchController() {
         super();
     }
+    
+    // asassas
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		
